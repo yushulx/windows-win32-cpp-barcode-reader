@@ -387,6 +387,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     case WM_DESTROY:
+        if (cvr)
+        {
+			delete cvr;
+		}
+
+        if (g_pImage)
+        {
+            delete g_pImage;
+        }
+        
         PostQuitMessage(0);
         break;
     default:
