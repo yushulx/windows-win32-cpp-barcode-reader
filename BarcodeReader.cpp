@@ -86,6 +86,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ULONG_PTR gdiplusToken;
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
 
+    // Initialize DBR
+    char errorMsgBuffer[512];
+    const char* pLicense = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
+    CLicenseManager::InitLicense(pLicense, errorMsgBuffer, 512);
+    cvr = new CCaptureVisionRouter;
+
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BARCODEREADER, szWindowClass, MAX_LOADSTRING);
@@ -186,12 +192,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        // Initialize DBR
-        char errorMsgBuffer[512];
-        const char* pLicense = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
-        CLicenseManager::InitLicense(pLicense, errorMsgBuffer, 512);
-        cvr = new CCaptureVisionRouter;
-
         hwndImagePanel = CreateWindowEx(
             0,                              
             L"STATIC",                      
