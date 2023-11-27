@@ -223,7 +223,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             WS_CHILD | WS_VISIBLE | SS_ETCHEDFRAME, 
             10, 10, 100, 100,               
             hWnd,                          
-            (HMENU)IDC_IMAGE_PANEL,             
+            (HMENU)IDC_RESULT_PANEL,             
             (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),               
             nullptr);
 
