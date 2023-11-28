@@ -8,6 +8,7 @@
 #include <commdlg.h> 
 #include <gdiplus.h>
 #include <string>
+#include <vector>
 
 #pragma comment (lib, "Gdiplus.lib") 
 #pragma comment (lib, "dbr/lib/DynamsoftCorex64.lib")
@@ -38,6 +39,7 @@ Gdiplus::Image* g_pImage = nullptr;
 int width = 0, height = 0;
 HWND hwndImagePanel = nullptr, hwndResultPanel = nullptr, hwndEdit = nullptr;
 CCaptureVisionRouter* cvr = nullptr;
+vector<CCapturedResult*> results;
 
 const char* ConvertWCharToChar(const WCHAR* wcharStr)
 {
@@ -296,6 +298,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     // Decode barcodes from the image
                     const char* filename = ConvertWCharToChar(ofn.lpstrFile);
                     CCapturedResult* result = cvr->Capture(filename);
+                    results.push_back(result);
                     delete filename;
                     if (result->GetErrorCode() != 0) {
                         printf("%d, %s\n", result->GetErrorCode() , result->GetErrorString() );
@@ -356,6 +359,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 Gdiplus::Graphics graphics(hdc);
                 graphics.DrawImage(g_pImage, 10, 50, imageWidth, imageHeight);
+
+                // Draw overlay
+                if (!results.empty()) {
+                    CCapturedResult* result = results[0];
+
+                    Gdiplus::Pen pen(Gdiplus::Color(255, 255, 0, 255));
+
+                    Gdiplus::FontFamily fontFamily(L"Arial");
+                    Gdiplus::Font font(&fontFamily, 24, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+                    Gdiplus::SolidBrush solidBrush(Gdiplus::Color(255, 255, 0, 0));
+
+                    int capturedResultItemCount = result->GetItemsCount();
+
+                    if (capturedResultItemCount > 0) {
+                        for (int j = 0; j < capturedResultItemCount; j++)
+                        {
+                            const CCapturedResultItem* capturedResultItem = result->GetItem(j);
+                            CapturedResultItemType type = capturedResultItem->GetType();
+                            if (type & CapturedResultItemType::CRIT_BARCODE)
+                            {
+                                const CBarcodeResultItem* barcodeResultItem = dynamic_cast<const CBarcodeResultItem*> (capturedResultItem);
+
+                                CQuadrilateral location = barcodeResultItem->GetLocation();
+                                Gdiplus::Point points[4];
+                                points[0].X = location.points[0][0] * scale + 10;
+                                points[0].Y = location.points[0][1] * scale + 50;
+                                points[1].X = location.points[1][0] * scale + 10;
+                                points[1].Y = location.points[1][1] * scale + 50;
+                                points[2].X = location.points[2][0] * scale + 10;
+                                points[2].Y = location.points[2][1] * scale + 50;
+                                points[3].X = location.points[3][0] * scale + 10;
+                                points[3].Y = location.points[3][1] * scale + 50;
+
+                                graphics.DrawPolygon(&pen, points, 4);
+
+                                wchar_t* newText = ConvertCharToWChar(barcodeResultItem->GetText());
+                                graphics.DrawString(
+                                    newText, -1, &font,
+                                    Gdiplus::PointF(points[0].X, points[0].Y),
+                                    &solidBrush);
+                                delete newText;
+
+                            }
+                        }
+                    }
+
+                    results.pop_back();
+                    delete result;
+                }
             }
 
             EndPaint(hWnd, &ps);
@@ -397,6 +449,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             delete g_pImage;
         }
+
+        for (int i = 0; i < results.size(); i++)
+        {
+            if (results[i]) {
+                delete results[i];
+            }
+		}
         
         PostQuitMessage(0);
         break;
